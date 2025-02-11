@@ -77,7 +77,7 @@ resource "aws_codebuild_project" "web_build" {
 
   source {
     type            = "GITHUB"
-    location        = "https://github.com/your-repo/your-web-app.git"
+    location        = "https://github.com/idan5353/myproject11.2.git"
     git_clone_depth = 1
     buildspec       = "buildspec.yml"
   }
