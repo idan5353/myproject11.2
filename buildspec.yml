@@ -2,16 +2,15 @@ version: 0.2
 
 phases:
   install:
-    commands:
-      - curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-      - apt-get install -y nodejs
+    runtime-versions:
+      nodejs: 18  # Ensures Node.js 18 is used
   pre_build:
     commands:
-      - echo "Installing source NPM dependencies..."
+      - echo "Installing NPM dependencies..."
       - npm install
   build:
     commands:
-      - echo "Build started on $(date)"
+      - echo "Starting the build process..."
       - npm run build
   post_build:
     commands:
