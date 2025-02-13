@@ -5,7 +5,7 @@ This project implements a scalable, secure web application infrastructure on AWS
 
 ## 🏗️ Architecture
 The infrastructure consists of several key components:
-
+<img src="diagram2.png">
 ### 🌍 Frontend Delivery
 - 🚀 CloudFront Distribution for global content delivery
 - 🛡️ WAF (Web Application Firewall) for security
