@@ -42,16 +42,48 @@ resource "aws_launch_template" "web_template" {
   instance_type = "t2.micro"
   image_id = "ami-0005ee01bca55ab66"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-
+iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
   user_data = base64encode(<<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y httpd
+              yum install -y httpd python3 python3-pip
+              pip3 install boto3
               systemctl start httpd
               systemctl enable httpd
+
+              # Create a Python script to handle analytics
+              cat > /var/www/html/analytics.py << 'END'
+              import boto3
+              import json
+              import time
+              from datetime import datetime, timedelta
+
+              dynamodb = boto3.resource('dynamodb')
+              table = dynamodb.Table('visitor-analytics')
+
+              def record_visit(visitor_ip, path, user_agent):
+                  timestamp = datetime.utcnow().isoformat()
+                  expiration_time = int((datetime.utcnow() + timedelta(days=90)).timestamp())
+                  
+                  table.put_item(
+                      Item={
+                          'visitor_ip': visitor_ip,
+                          'timestamp': timestamp,
+                          'path': path,
+                          'user_agent': user_agent,
+                          'expiration_time': expiration_time
+                      }
+                  )
+              END
+
+              # Create basic index page
               echo "Welcome to Apache on EC2!" > /var/www/html/index.html
               EOF
   )
+
+  
   monitoring {
     enabled = true
   }
