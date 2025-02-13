@@ -4,13 +4,10 @@ phases:
   install:
     runtime-versions:
       nodejs: 18
-    commands:
-      - echo "Using Node.js version: $(node -v)"
-      - echo "Installing dependencies..."
-      - npm install
   pre_build:
     commands:
-      - echo "Pre-build phase..."
+      - echo "Installing source NPM dependencies..."
+      - npm install
   build:
     commands:
       - echo "Build started on $(date)"
@@ -18,6 +15,7 @@ phases:
   post_build:
     commands:
       - echo "Build completed on $(date)"
+
 artifacts:
   files:
     - '**/*'
