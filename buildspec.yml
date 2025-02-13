@@ -3,10 +3,10 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 12  # Set an older version to avoid errors, but install Node.js 18 manually
+      nodejs: 12  # Temporary old version to pass validation
     commands:
       - echo "Installing Node.js 18..."
-      - curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      - curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
       - yum install -y nodejs
   pre_build:
     commands:
