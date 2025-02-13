@@ -2,8 +2,9 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 18
+    commands:
+      - curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      - apt-get install -y nodejs
   pre_build:
     commands:
       - echo "Installing source NPM dependencies..."
@@ -18,5 +19,5 @@ phases:
 
 artifacts:
   files:
-    - '**/*'
+    - '**/*'  
   base-directory: 'dist'
