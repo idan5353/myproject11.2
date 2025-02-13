@@ -79,7 +79,7 @@ iam_instance_profile {
               END
 
               # Create basic index page
-              echo "Welcome to Apache on EC2!" > /var/www/html/index.html
+              echo "Welcome to Apache on EC2! idan king" > /var/www/html/index.html
               EOF
   )
 
