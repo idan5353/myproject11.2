@@ -70,10 +70,11 @@ resource "aws_codebuild_project" "web_build" {
 
   environment {
   compute_type                = "BUILD_GENERAL1_SMALL"
-  image                       = "aws/codebuild/standard:8.0"  # Supports Node.js 18
+  image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0" # Supports Node.js 18
   type                        = "LINUX_CONTAINER"
   image_pull_credentials_type = "CODEBUILD"
 }
+
 
 
   source {
