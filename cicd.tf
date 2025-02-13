@@ -123,7 +123,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:GetApplication",
           "codedeploy:GetApplicationRevision",
           "codedeploy:RegisterApplicationRevision",
-          "codedeploy:GetDeploymentConfig"
+          "codedeploy:GetDeploymentConfig",
+          "codestar-connections:UseConnection" # Added permission
         ]
         Resource = "*"
       }
@@ -153,7 +154,7 @@ resource "aws_codepipeline" "web_pipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        ConnectionArn    = "arn:aws:codeconnections:us-west-2:851725642392:connection/99806b32-77b9-4b63-996b-47d44756dab1"  # Replace with your connection ARN
+        ConnectionArn    = "arn:aws:codeconnections:us-west-2:851725642392:connection/99806b32-77b9-4b63-996b-47d44756dab1"
         FullRepositoryId = "idan5353/myproject11.2"
         BranchName       = "main"
       }
@@ -189,7 +190,7 @@ resource "aws_codepipeline" "web_pipeline" {
       version         = "1"
 
       configuration = {
-        ApplicationName = "myapp"
+        ApplicationName     = "myapp"
         DeploymentGroupName = "your-deployment-group"
       }
     }
