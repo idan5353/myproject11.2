@@ -3,20 +3,24 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 18  # Ensures Node.js 18 is used
+      nodejs: 12  # Set an older version to avoid errors, but install Node.js 18 manually
+    commands:
+      - echo "Installing Node.js 18..."
+      - curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      - yum install -y nodejs
   pre_build:
     commands:
-      - echo "Installing NPM dependencies..."
+      - echo "Installing dependencies..."
       - npm install
   build:
     commands:
-      - echo "Starting the build process..."
+      - echo "Running build..."
       - npm run build
   post_build:
     commands:
-      - echo "Build completed on $(date)"
+      - echo "Build completed!"
 
 artifacts:
   files:
-    - '**/*'  
+    - '**/*'
   base-directory: 'dist'
