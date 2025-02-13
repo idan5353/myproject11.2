@@ -39,9 +39,10 @@ The infrastructure consists of several key components:
 ```
 ├── main.tf                 # Main infrastructure configuration
 ├── dynamodb.tf             # DynamoDB configuration
-├── variables.tf            # Variable definitions
-├── outputs.tf             # Output definitions
+├── monitoring.tf            # Variable definitions
+├── cicd.tf                  # Output definitions
 ├── buildspec.yml          # CodeBuild specifications
+├── appspec.yml            # CodeBuild specifications
 └── README.md              # Project documentation
 ```
 
@@ -155,9 +156,5 @@ For issues or questions:
 2. 🌿 Create a feature branch
 3. 📝 Submit a pull request
 
-## 📜 License
-[Your chosen license]
-
 ## ✍️ Authors
-- 👨‍💻 Your Name
-- 👥 Additional Contributors
+- 👨‍💻 Idan Uziel
