@@ -4,7 +4,7 @@
 This project implements a scalable, secure web application infrastructure on AWS using Terraform. The architecture includes auto-scaling EC2 instances, CloudFront distribution, WAF security, monitoring, and CI/CD pipeline integration.
 
 ## 🏗️ Architecture
-The infrastructure consists of several key components:
+The infrastructure consists of several key components: <br> <br>
 <img src="diagram2.png">
 ### 🌍 Frontend Delivery
 - 🚀 CloudFront Distribution for global content delivery
