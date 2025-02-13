@@ -50,8 +50,8 @@ The infrastructure consists of several key components: <br> <br>
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/idan5353/myproject11.2.git
+cd myproject11.2
 ```
 
 2. Update the variables:
