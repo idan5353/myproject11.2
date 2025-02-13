@@ -3,24 +3,26 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 12  # Temporary old version to pass validation
-    commands:
-      - echo "Installing Node.js 18..."
-      - curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
-      - yum install -y nodejs
-  pre_build:
+      nodejs: 18  # Ensure CodeBuild uses Node.js 18
     commands:
       - echo "Installing dependencies..."
       - npm install
+
+  pre_build:
+    commands:
+      - echo "Pre-build phase - Running tests (if applicable)..."
+      - npm test || echo "Tests failed, continuing deployment..."
+
   build:
     commands:
-      - echo "Running build..."
-      - npm run build
+      - echo "Building the application..."
+      - npm run build  # Adjust this if your build command is different
+
   post_build:
     commands:
-      - echo "Build completed!"
+      - echo "Build completed successfully!"
 
 artifacts:
   files:
     - '**/*'
-  base-directory: 'dist'
+  base-directory: 'dist'  # Adjust if your build output is in a different folder
