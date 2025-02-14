@@ -127,11 +127,9 @@ resource "aws_iam_role" "codepipeline_role" {
   })
 }
 
-
-# IAM Policy for CodePipeline
-# IAM policy for CodePipeline (including CodeDeploy permissions)
+# IAM Policy for CodePipeline (including CodeDeploy and EC2 permissions)
 resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
+  name = "codepipeline-policy"
   role = aws_iam_role.codepipeline_role.name
 
   policy = jsonencode({
@@ -154,14 +152,16 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:GetDeploymentConfig",
           "codedeploy:ListDeploymentGroups",
           "codedeploy:ListDeployments",
-          "codestar-connections:UseConnection"
+          "codestar-connections:UseConnection",
+          "ec2:DescribeInstances",
+          "ec2:CreateTags",
+          "ec2:DescribeTags"
         ]
         Resource = "*"
       }
     ]
   })
 }
-
 
 # CodeDeploy Application (Ensure this exists in AWS Console)
 resource "aws_codedeploy_app" "myapp" {
