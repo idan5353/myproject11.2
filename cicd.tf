@@ -10,7 +10,7 @@ resource "aws_s3_bucket_versioning" "artifacts_versioning" {
   }
 }
 
-# IAM role for CodeBuild
+# IAM Role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role"
 
@@ -28,7 +28,7 @@ resource "aws_iam_role" "codebuild_role" {
   })
 }
 
-# IAM policy for CodeBuild
+# IAM Policy for CodeBuild
 resource "aws_iam_role_policy" "codebuild_policy" {
   role = aws_iam_role.codebuild_role.name
 
@@ -37,7 +37,6 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     Statement = [
       {
         Effect = "Allow"
-        Resource = ["*"]
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
@@ -49,14 +48,23 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
-          "ecr:PutImage"
-        ]
+          "ecr:PutImage",
+          "codedeploy:RegisterApplicationRevision",
+          "codedeploy:GetDeploymentConfig",
+          "codedeploy:CreateDeployment",
+          "codedeploy:GetDeployment",
+          "codedeploy:GetApplication",
+          "codedeploy:GetApplicationRevision",
+          "codedeploy:ListApplications",
+          "codedeploy:ListDeploymentGroups"
+        ],
+        Resource = "*"
       }
     ]
   })
 }
 
-# CodeBuild project
+# CodeBuild Project
 resource "aws_codebuild_project" "web_build" {
   name          = "web-build"
   description   = "Build web application"
@@ -64,23 +72,21 @@ resource "aws_codebuild_project" "web_build" {
   service_role  = aws_iam_role.codebuild_role.arn
 
   artifacts {
-    type = "S3"
+    type     = "S3"
     location = aws_s3_bucket.artifacts.bucket
   }
 
   environment {
-  compute_type                = "BUILD_GENERAL1_SMALL"
-  image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0" # Supports Node.js 18
-  type                        = "LINUX_CONTAINER"
-  image_pull_credentials_type = "CODEBUILD"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
 
-  environment_variable {
+    environment_variable {
       name  = "NODE_ENV"
       value = "production"
     }
-}
-
-
+  }
 
   source {
     type            = "GITHUB"
@@ -98,10 +104,9 @@ resource "aws_codebuild_project" "web_build" {
       status = "ENABLED"
     }
   }
-
 }
 
-# IAM role for CodePipeline
+# IAM Role for CodePipeline
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role"
 
@@ -119,7 +124,7 @@ resource "aws_iam_role" "codepipeline_role" {
   })
 }
 
-# IAM policy for CodePipeline
+# IAM Policy for CodePipeline
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
   role = aws_iam_role.codepipeline_role.name
@@ -142,12 +147,37 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:GetApplicationRevision",
           "codedeploy:RegisterApplicationRevision",
           "codedeploy:GetDeploymentConfig",
-          "codestar-connections:UseConnection" # Added permission
-        ]
+          "codestar-connections:UseConnection"
+        ],
         Resource = "*"
       }
     ]
   })
+}
+
+# CodeDeploy Application (Ensure this exists in AWS Console)
+resource "aws_codedeploy_app" "myapp" {
+  name = "myapp"
+}
+
+# CodeDeploy Deployment Group (Ensure this exists)
+resource "aws_codedeploy_deployment_group" "my_deployment_group" {
+  app_name              = aws_codedeploy_app.myapp.name
+  deployment_group_name = "my-deployment-group"
+  service_role_arn      = aws_iam_role.codepipeline_role.arn
+
+  deployment_style {
+    deployment_type   = "IN_PLACE"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+  }
+
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "Name"
+      type  = "KEY_AND_VALUE"
+      value = "my-ec2-instance"
+    }
+  }
 }
 
 # CodePipeline
@@ -208,8 +238,8 @@ resource "aws_codepipeline" "web_pipeline" {
       version         = "1"
 
       configuration = {
-        ApplicationName     = "myapp"
-        DeploymentGroupName = "your-deployment-group"
+        ApplicationName     = aws_codedeploy_app.myapp.name
+        DeploymentGroupName = aws_codedeploy_deployment_group.my_deployment_group.deployment_group_name
       }
     }
   }
