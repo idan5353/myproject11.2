@@ -113,7 +113,7 @@ resource "aws_launch_template" "web_template" {
               END
 
               # Create basic index page
-              echo "Welcome to Apache on EC2! idan king!!" > /var/www/html/index.html
+              echo "Welcome to Apache on EC2! idan king535!!" > /var/www/html/index.html
               EOF
   )
 
