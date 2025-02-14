@@ -8,26 +8,36 @@ phases:
       - echo "Installing dependencies..."
       - pwd
       - ls -la
-      - if [ ! -f "package.json" ]; then echo "package.json not found!" && exit 1; fi
+      - cat package.json
       - npm install
 
   pre_build:
     commands:
-      - echo "Pre-build phase - Running tests (if applicable)..."
-      - npm test || echo "Tests failed, continuing deployment..."
+      - echo "Pre-build phase"
+      - echo "Node version:"
+      - node -v
+      - echo "NPM version:"
+      - npm -v
+      - echo "Installed dependencies:"
+      - npm list || true
 
   build:
     commands:
+      - echo "Starting build phase..."
+      - echo "Available npm scripts:"
+      - npm run || true
       - echo "Building the application..."
-      - npm run build
+      - npm run build || { echo "Build failed with error code $?"; exit 1; }
 
   post_build:
     commands:
-      - echo "Build completed successfully!"
-      - echo "Contents of build directory:"
+      - echo "Build phase completed"
+      - echo "Directory contents:"
+      - ls -la
+      - echo "Build output directory contents (if exists):"
       - ls -la dist || echo "dist directory not found"
 
 artifacts:
   files:
     - '**/*'
-  base-directory: 'dist'  # Make sure this matches your build output directory
+  base-directory: 'dist'
