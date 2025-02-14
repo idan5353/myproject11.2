@@ -188,7 +188,7 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
   
   ec2_tag_set {
     ec2_tag_filter {
-      key   = "Name"
+      key   = "Environment"
       type  = "KEY_AND_VALUE"
       value = "Production"
     }
