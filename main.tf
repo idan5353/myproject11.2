@@ -31,6 +31,28 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+# Attach permissions for CodeDeploy to the EC2 role
+resource "aws_iam_policy" "codedeploy_policy" {
+  name        = "CodeDeployEC2Policy"
+  description = "Policy for EC2 instances to interact with CodeDeploy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "codedeploy:*"
+        Effect = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "codedeploy_role_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.codedeploy_policy.arn
+}
+
 # Security Group
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
