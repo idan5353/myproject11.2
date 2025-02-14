@@ -3,9 +3,12 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 18  # Ensure CodeBuild uses Node.js 18
+      nodejs: 18
     commands:
       - echo "Installing dependencies..."
+      - pwd
+      - ls -la
+      - if [ ! -f "package.json" ]; then echo "package.json not found!" && exit 1; fi
       - npm install
 
   pre_build:
@@ -16,13 +19,15 @@ phases:
   build:
     commands:
       - echo "Building the application..."
-      - npm run build  # Adjust this if your build command is different
+      - npm run build
 
   post_build:
     commands:
       - echo "Build completed successfully!"
+      - echo "Contents of build directory:"
+      - ls -la dist || echo "dist directory not found"
 
 artifacts:
   files:
     - '**/*'
-  base-directory: 'dist'  # Adjust if your build output is in a different folder
+  base-directory: 'dist'  # Make sure this matches your build output directory

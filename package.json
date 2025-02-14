@@ -1,0 +1,20 @@
+{
+  "name": "scaleflix",
+  "version": "1.0.0",
+  "description": "This project implements a scalable, secure web application infrastructure on AWS using Terraform. The architecture includes auto-scaling EC2 instances, CloudFront distribution, WAF security, monitoring, and CI/CD pipeline integration.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idan5353/myproject11.2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/idan5353/myproject11.2/issues"
+  },
+  "homepage": "https://github.com/idan5353/myproject11.2#readme"
+}

@@ -60,7 +60,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
 resource "aws_codebuild_project" "web_build" {
   name          = "web-build"
   description   = "Build web application"
-  build_timeout = "5"
+  build_timeout = "15"
   service_role  = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -73,6 +73,11 @@ resource "aws_codebuild_project" "web_build" {
   image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0" # Supports Node.js 18
   type                        = "LINUX_CONTAINER"
   image_pull_credentials_type = "CODEBUILD"
+
+  environment_variable {
+      name  = "NODE_ENV"
+      value = "production"
+    }
 }
 
 
@@ -82,7 +87,18 @@ resource "aws_codebuild_project" "web_build" {
     location        = "https://github.com/idan5353/myproject11.2.git"
     git_clone_depth = 1
     buildspec       = "buildspec.yml"
+
+    git_submodules_config {
+      fetch_submodules = true
+    }
   }
+
+  logs_config {
+    cloudwatch_logs {
+      status = "ENABLED"
+    }
+  }
+
 }
 
 # IAM role for CodePipeline
