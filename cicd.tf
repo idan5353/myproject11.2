@@ -190,7 +190,7 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
     ec2_tag_filter {
       key   = "Name"
       type  = "KEY_AND_VALUE"
-      value = "my-ec2-instance"
+      value = "Production"
     }
   }
 }
