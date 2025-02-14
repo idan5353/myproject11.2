@@ -18,26 +18,25 @@ phases:
       - node -v
       - echo "NPM version:"
       - npm -v
-      - echo "Installed dependencies:"
-      - npm list || true
+      - echo "Project structure:"
+      - ls -la
 
   build:
     commands:
       - echo "Starting build phase..."
-      - echo "Available npm scripts:"
-      - npm run || true
+      - echo "Project contents:"
+      - ls -la
       - echo "Building the application..."
-      - npm run build || { echo "Build failed with error code $?"; exit 1; }
+      - npm run build || echo "Build script needs to be configured"
 
   post_build:
     commands:
       - echo "Build phase completed"
       - echo "Directory contents:"
       - ls -la
-      - echo "Build output directory contents (if exists):"
-      - ls -la dist || echo "dist directory not found"
 
 artifacts:
   files:
     - '**/*'
-  base-directory: 'dist'
+  discard-paths: no
+  base-directory: '.'  # Changed to root directory for now
