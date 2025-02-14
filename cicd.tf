@@ -153,9 +153,10 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:ListDeploymentGroups",
           "codedeploy:ListDeployments",
           "codestar-connections:UseConnection",
-          "ec2:DescribeInstances",
-          "ec2:CreateTags",
-          "ec2:DescribeTags"
+          "ec2:DescribeInstances",      # Added EC2 permissions
+          "ec2:DescribeTags",           # Added EC2 permissions
+          "ec2:DescribeRegions",        # If needed for region-related EC2 info
+          "ec2:DescribeSecurityGroups"  # EC2 security group interaction
         ]
         Resource = "*"
       }
