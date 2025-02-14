@@ -1,18 +1,41 @@
 provider "aws" {
-  region = "us-west-2"  # Update with your region
+  region = "us-west-2"
 }
 
-# Add provider for us-east-1 (required for WAF with CloudFront)
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
 }
 
-# Create an EC2 security group
+# EC2 IAM Role
+resource "aws_iam_role" "ec2_role" {
+  name = "ec2_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# EC2 Instance Profile
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "ec2_profile"
+  role = aws_iam_role.ec2_role.name
+}
+
+# Security Group
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Allow HTTP and SSH traffic"
-  vpc_id      = "vpc-052392afe48c5a6ac"  # Added VPC ID
+  vpc_id      = "vpc-052392afe48c5a6ac"
 
   ingress {
     from_port   = 22
@@ -36,22 +59,33 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# Launch Template for EC2 instances
+# Launch Template
 resource "aws_launch_template" "web_template" {
   name = "web-template"
   instance_type = "t2.micro"
   image_id = "ami-0005ee01bca55ab66"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-iam_instance_profile {
+
+  iam_instance_profile {
     name = aws_iam_instance_profile.ec2_profile.name
   }
+
   user_data = base64encode(<<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y httpd python3 python3-pip
+              yum install -y httpd python3 python3-pip ruby wget
               pip3 install boto3
               systemctl start httpd
               systemctl enable httpd
+
+              # Install CodeDeploy Agent
+              wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+              chmod +x ./install
+              ./install auto
+
+              # Start CodeDeploy Agent
+              systemctl start codedeploy-agent
+              systemctl enable codedeploy-agent
 
               # Create a Python script to handle analytics
               cat > /var/www/html/analytics.py << 'END'
@@ -83,13 +117,19 @@ iam_instance_profile {
               EOF
   )
 
-  
   monitoring {
     enabled = true
   }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Environment = "Production"
+    }
+  }
 }
 
-# Create an Auto Scaling Group with the Launch Template
+# Auto Scaling Group
 resource "aws_autoscaling_group" "web_asg" {
   desired_capacity    = 2
   max_size           = 3
@@ -101,9 +141,15 @@ resource "aws_autoscaling_group" "web_asg" {
     id      = aws_launch_template.web_template.id
     version = "$Latest"
   }
+
+  tag {
+    key                 = "Environment"
+    value               = "Production"
+    propagate_at_launch = true
+  }
 }
 
-# Create an Application Load Balancer
+# Application Load Balancer
 resource "aws_lb" "web_lb" {
   name               = "web-lb"
   internal           = false
@@ -113,7 +159,7 @@ resource "aws_lb" "web_lb" {
   enable_deletion_protection = false
 }
 
-# Create a Target Group for the Load Balancer
+# Target Group
 resource "aws_lb_target_group" "web_target_group" {
   name     = "web-target-group"
   port     = 80
@@ -132,7 +178,7 @@ resource "aws_lb_target_group" "web_target_group" {
   }
 }
 
-# Create a listener for the Load Balancer
+# Load Balancer Listener
 resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.web_lb.arn
   port              = 80
@@ -144,7 +190,7 @@ resource "aws_lb_listener" "http_listener" {
   }
 }
 
-# Create WAF Web ACL
+# WAF Web ACL
 resource "aws_wafv2_web_acl" "main" {
   provider    = aws.us-east-1
   name        = "main-web-acl"
@@ -211,7 +257,7 @@ resource "aws_wafv2_web_acl" "main" {
   }
 }
 
-# Create CloudFront distribution
+# CloudFront Distribution
 resource "aws_cloudfront_distribution" "web_distribution" {
   enabled = true
   
@@ -260,6 +306,72 @@ resource "aws_cloudfront_distribution" "web_distribution" {
   }
 
   price_class = "PriceClass_100"
+}
+
+# CodeDeploy Application
+resource "aws_codedeploy_app" "web_app" {
+  name = "myapp"
+}
+
+# CodeDeploy Service Role
+resource "aws_iam_role" "codedeploy_service_role" {
+  name = "codedeploy-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "codedeploy.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Attach AWS managed policy for CodeDeploy
+resource "aws_iam_role_policy_attachment" "codedeploy_service_role_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = aws_iam_role.codedeploy_service_role.name
+}
+
+# Attach CodeDeploy policy to EC2 role
+resource "aws_iam_role_policy_attachment" "ec2_codedeploy_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = aws_iam_role.ec2_role.name
+}
+
+# CodeDeploy Deployment Group
+resource "aws_codedeploy_deployment_group" "web_deployment_group" {
+  app_name               = aws_codedeploy_app.web_app.name
+  deployment_group_name  = "your-deployment-group"
+  service_role_arn      = aws_iam_role.codedeploy_service_role.arn
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "IN_PLACE"
+  }
+
+  auto_rollback_configuration {
+    enabled = true
+    events  = ["DEPLOYMENT_FAILURE"]
+  }
+
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "Environment"
+      type  = "KEY_AND_VALUE"
+      value = "Production"
+    }
+  }
+
+  load_balancer_info {
+    target_group_info {
+      name = aws_lb_target_group.web_target_group.name
+    }
+  }
 }
 
 # Outputs
