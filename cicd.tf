@@ -10,6 +10,48 @@ resource "aws_s3_bucket_versioning" "artifacts_versioning" {
   }
 }
 
+# IAM Policy for EC2 and CodeDeploy Permissions
+resource "aws_iam_policy" "codepipeline_ec2_codedeploy_policy" {
+  name        = "CodePipelineEC2CodeDeployPolicy"
+  description = "Policy that allows CodePipeline to manage EC2 instances and CodeDeploy"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus",
+          "ec2:StartInstances",
+          "ec2:StopInstances",
+          "ec2:RebootInstances",
+          "ec2:TerminateInstances",
+          "ec2:DescribeTags"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "codedeploy:CreateDeployment",
+          "codedeploy:GetDeployment",
+          "codedeploy:RegisterApplicationRevision",
+          "codedeploy:StopDeployment"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the Policy to the CodePipeline Role
+resource "aws_iam_role_policy_attachment" "codepipeline_policy_attachment" {
+  role       = "codepipeline-role"  # Update this to the correct role name if needed
+  policy_arn = aws_iam_policy.codepipeline_ec2_codedeploy_policy.arn
+}
+
+
 # IAM Role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role"
