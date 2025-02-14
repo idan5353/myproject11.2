@@ -308,71 +308,7 @@ resource "aws_cloudfront_distribution" "web_distribution" {
   price_class = "PriceClass_100"
 }
 
-# CodeDeploy Application
-resource "aws_codedeploy_app" "web_app" {
-  name = "myapp"
-}
 
-# CodeDeploy Service Role
-resource "aws_iam_role" "codedeploy_service_role" {
-  name = "codedeploy-service-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "codedeploy.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# Attach AWS managed policy for CodeDeploy
-resource "aws_iam_role_policy_attachment" "codedeploy_service_role_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
-  role       = aws_iam_role.codedeploy_service_role.name
-}
-
-# Attach CodeDeploy policy to EC2 role
-resource "aws_iam_role_policy_attachment" "ec2_codedeploy_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
-  role       = aws_iam_role.ec2_role.name
-}
-
-# CodeDeploy Deployment Group
-resource "aws_codedeploy_deployment_group" "web_deployment_group" {
-  app_name               = aws_codedeploy_app.web_app.name
-  deployment_group_name  = "your-deployment-group"
-  service_role_arn      = aws_iam_role.codedeploy_service_role.arn
-
-  deployment_style {
-    deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type   = "IN_PLACE"
-  }
-
-  auto_rollback_configuration {
-    enabled = true
-    events  = ["DEPLOYMENT_FAILURE"]
-  }
-
-  ec2_tag_set {
-    ec2_tag_filter {
-      key   = "Environment"
-      type  = "KEY_AND_VALUE"
-      value = "Production"
-    }
-  }
-
-  load_balancer_info {
-    target_group_info {
-      name = aws_lb_target_group.web_target_group.name
-    }
-  }
-}
 
 # Outputs
 output "elb_url" {

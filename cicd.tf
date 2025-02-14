@@ -114,17 +114,22 @@ resource "aws_iam_role" "codepipeline_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "codepipeline.amazonaws.com"
+          Service = [
+            "codepipeline.amazonaws.com",
+            "codedeploy.amazonaws.com"
+          ]
         }
+        Action = "sts:AssumeRole"
       }
     ]
   })
 }
 
+
 # IAM Policy for CodePipeline
+# IAM policy for CodePipeline (including CodeDeploy permissions)
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
   role = aws_iam_role.codepipeline_role.name
@@ -147,13 +152,16 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:GetApplicationRevision",
           "codedeploy:RegisterApplicationRevision",
           "codedeploy:GetDeploymentConfig",
+          "codedeploy:ListDeploymentGroups",
+          "codedeploy:ListDeployments",
           "codestar-connections:UseConnection"
-        ],
+        ]
         Resource = "*"
       }
     ]
   })
 }
+
 
 # CodeDeploy Application (Ensure this exists in AWS Console)
 resource "aws_codedeploy_app" "myapp" {
@@ -171,6 +179,12 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
     deployment_option = "WITH_TRAFFIC_CONTROL"
   }
 
+  load_balancer_info {
+    target_group_info {
+      name = aws_lb_target_group.web_target_group.name
+    }
+  }
+  
   ec2_tag_set {
     ec2_tag_filter {
       key   = "Name"
