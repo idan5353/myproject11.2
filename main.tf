@@ -63,6 +63,58 @@ resource "aws_iam_role" "ec2_role" {
   }
 }
 
+
+resource "aws_iam_policy" "ec2_codedeploy_policy" {
+  name        = "ec2-codedeploy-policy"
+  description = "Policy that allows EC2 instances to interact with CodeDeploy and S3"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.artifacts.arn,
+          "${aws_s3_bucket.artifacts.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codedeploy:RegisterApplicationRevision",
+          "codedeploy:GetApplicationRevision",
+          "codedeploy:CreateDeployment",
+          "codedeploy:GetDeployment",
+          "codedeploy:GetDeploymentConfig"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the Custom Policy to the EC2 Role
+resource "aws_iam_role_policy_attachment" "ec2_codedeploy_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.ec2_codedeploy_policy.arn
+}
+
+# Attach the AmazonEC2RoleforAWSCodeDeploy Policy to the EC2 Role
+resource "aws_iam_role_policy_attachment" "ec2_codedeploy_service_role" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
+}
+
+# IAM Instance Profile for EC2
+resource "aws_iam_instance_profile" "ec2_codedeploy_profile" {
+  name = "ec2-codedeploy-profile"
+  role = aws_iam_role.ec2_role.name
+}
+
 # EC2 Instance Profile
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2_profile"
@@ -76,9 +128,11 @@ resource "aws_launch_template" "web_template" {
   instance_type          = "t2.micro"
   image_id               = "ami-0005ee01bca55ab66"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-
+  tags = {
+    Name = "web-server"
+  }
   iam_instance_profile {
-    name = aws_iam_instance_profile.ec2_profile.name
+    name = aws_iam_instance_profile.ec2_codedeploy_profile.name
   }
 
   user_data = base64encode(<<-EOF
