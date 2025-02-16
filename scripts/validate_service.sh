@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "Running ValidateService hook..."
+
 # Check if the web server is running
 if systemctl is-active --quiet httpd; then
   echo "Web server is running."

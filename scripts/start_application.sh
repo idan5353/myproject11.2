@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "Running ApplicationStart hook..."
+
 # Start the web server
 echo "Starting httpd..."
 systemctl start httpd
