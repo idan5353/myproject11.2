@@ -1,9 +1,9 @@
 # DynamoDB table for visitor analytics
 resource "aws_dynamodb_table" "visitor_analytics" {
-  name           = "visitor-analytics"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "visitor_ip"
-  range_key      = "timestamp"
+  name         = "visitor-analytics"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "visitor_ip"
+  range_key    = "timestamp"
 
   attribute {
     name = "visitor_ip"
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy" "dynamodb_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:Query",
           "dynamodb:BatchWriteItem",
-          "dynamodb:Scan"  # Added Scan permission
+          "dynamodb:Scan"
         ]
         Resource = [
           aws_dynamodb_table.visitor_analytics.arn

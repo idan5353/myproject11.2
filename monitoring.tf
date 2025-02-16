@@ -1,6 +1,6 @@
 resource "aws_ssm_parameter" "cw_agent" {
-  name  = "/cloudwatch-agent/config"
-  type  = "String"
+  name = "/cloudwatch-agent/config"
+  type = "String"
   value = jsonencode({
     metrics = {
       metrics_collected = {
@@ -26,7 +26,7 @@ resource "aws_ssm_parameter" "cw_agent" {
             "disk_free"
           ],
           metrics_collection_interval = 60,
-          resources = ["/"]
+          resources                   = ["/"]
         }
       }
     }
@@ -49,7 +49,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm" {
   statistic           = "Average"
   threshold           = "80"
   alarm_description   = "This metric monitors EC2 CPU utilization"
-  alarm_actions      = [aws_sns_topic.monitoring_alerts.arn]
+  alarm_actions       = [aws_sns_topic.monitoring_alerts.arn]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.web_asg.name
@@ -66,7 +66,7 @@ resource "aws_cloudwatch_metric_alarm" "memory_alarm" {
   statistic           = "Average"
   threshold           = "80"
   alarm_description   = "This metric monitors EC2 memory usage"
-  alarm_actions      = [aws_sns_topic.monitoring_alerts.arn]
+  alarm_actions       = [aws_sns_topic.monitoring_alerts.arn]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.web_asg.name
@@ -83,7 +83,7 @@ resource "aws_cloudwatch_metric_alarm" "disk_alarm" {
   statistic           = "Average"
   threshold           = "85"
   alarm_description   = "This metric monitors EC2 disk usage"
-  alarm_actions      = [aws_sns_topic.monitoring_alerts.arn]
+  alarm_actions       = [aws_sns_topic.monitoring_alerts.arn]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.web_asg.name
@@ -157,9 +157,16 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
+
+# Attach SSM policy (if needed for CloudWatch agent installation)
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # Add CloudWatch Logs permissions to EC2 role
 resource "aws_iam_role_policy" "cloudwatch_policy" {
-  name = "cloudwatch-policy"
+  name = "cloudwatch-access-policy"
   role = aws_iam_role.ec2_role.id
 
   policy = jsonencode({
@@ -168,11 +175,15 @@ resource "aws_iam_role_policy" "cloudwatch_policy" {
       {
         Effect = "Allow"
         Action = [
+          "cloudwatch:PutMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
-        Resource = ["arn:aws:logs:*:*:*"]
+        Resource = "*"
       }
     ]
   })

@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
+echo "Running ApplicationStart hook..."
+# Start the web server
 systemctl start httpd
-systemctl enable httpd
-echo "ApplicationStart: HTTPD started successfully" | tee -a /tmp/deploy.log
-sudo systemctl restart httpd

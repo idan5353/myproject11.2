@@ -1,3 +1,9 @@
 #!/bin/bash
-set -e
-systemctl status httpd | tee -a /tmp/deploy.log
+echo "Running ValidateService hook..."
+# Check if the web server is running
+if systemctl is-active --quiet httpd; then
+  echo "Web server is running."
+else
+  echo "Web server is not running."
+  exit 1
+fi

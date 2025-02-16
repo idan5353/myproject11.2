@@ -14,13 +14,13 @@ resource "aws_s3_bucket_versioning" "artifacts_versioning" {
 resource "aws_iam_policy" "codepipeline_ec2_codedeploy_policy" {
   name        = "CodePipelineEC2CodeDeployPolicy"
   description = "Policy that allows CodePipeline to manage EC2 instances and CodeDeploy"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "ec2:DescribeInstances",
           "ec2:DescribeInstanceStatus",
           "ec2:StartInstances",
@@ -32,8 +32,8 @@ resource "aws_iam_policy" "codepipeline_ec2_codedeploy_policy" {
         Resource = "*"
       },
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "codedeploy:CreateDeployment",
           "codedeploy:GetDeployment",
           "codedeploy:RegisterApplicationRevision",
@@ -47,7 +47,7 @@ resource "aws_iam_policy" "codepipeline_ec2_codedeploy_policy" {
 
 # Attach the Policy to the CodePipeline Role
 resource "aws_iam_role_policy_attachment" "codepipeline_policy_attachment" {
-  role       = "codepipeline-role"  # Update this to the correct role name if needed
+  role       = "codepipeline-role" # Update this to the correct role name if needed
   policy_arn = aws_iam_policy.codepipeline_ec2_codedeploy_policy.arn
 }
 
@@ -234,7 +234,7 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
       name = aws_lb_target_group.web_target_group.name
     }
   }
-  
+
   ec2_tag_set {
     ec2_tag_filter {
       key   = "Environment"

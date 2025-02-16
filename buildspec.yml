@@ -6,9 +6,6 @@ phases:
       nodejs: 18
     commands:
       - echo "Installing dependencies..."
-      - pwd
-      - ls -la
-      - cat package.json
       - npm install
 
   pre_build:
@@ -18,14 +15,10 @@ phases:
       - node -v
       - echo "NPM version:"
       - npm -v
-      - echo "Project structure:"
-      - ls -la
 
   build:
     commands:
       - echo "Starting build phase..."
-      - echo "Project contents:"
-      - ls -la
       - echo "Building the application..."
       - npm run build || echo "Build script needs to be configured"
 
@@ -39,4 +32,4 @@ artifacts:
   files:
     - '**/*'
   discard-paths: no
-  base-directory: '.'  # Changed to root directory for now
+  base-directory: 'dist'  # Change this to the directory where your build output is located
