@@ -216,13 +216,38 @@ resource "aws_autoscaling_group" "web_asg" {
     id      = aws_launch_template.web_template.id
     version = "$Latest"
   }
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+      instance_warmup       = 300
+    }
+    triggers = ["launch_template"]  # Automatically refresh when launch template changes
+  }
 
   tag {
     key                 = "Name"
     value              = "web-server"
     propagate_at_launch = true
   }
+
+  # If you're using CodeDeploy, add this tag
+  tag {
+    key                 = "Environment"
+    value              = "Production"
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
+  # Auto Scaling Group attachment to ALB
+resource "aws_autoscaling_attachment" "web_asg_attachment" {
+  autoscaling_group_name = aws_autoscaling_group.web_asg.name
+  lb_target_group_arn   = aws_lb_target_group.web_target_group.arn
+}
+
 
 # Application Load Balancer
 resource "aws_lb" "web_lb" {
