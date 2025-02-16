@@ -8,6 +8,7 @@ provider "aws" {
 }
 
 # EC2 IAM Role
+# EC2 IAM Role
 resource "aws_iam_role" "ec2_role" {
   name = "ec2_role"
 
@@ -25,12 +26,46 @@ resource "aws_iam_role" "ec2_role" {
   })
 }
 
+
+# Add AWSCodeDeployRole policy attachment
+resource "aws_iam_role_policy_attachment" "codedeploy_service_role_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+}
 # EC2 Instance Profile
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2_profile"
   role = aws_iam_role.ec2_role.name
 }
+# Add a new S3 policy for EC2 role
+resource "aws_iam_policy" "ec2_s3_policy" {
+  name        = "EC2S3Policy"
+  description = "Policy allowing EC2 instances to get artifacts from S3"
 
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "${aws_s3_bucket.artifacts.arn}",
+          "${aws_s3_bucket.artifacts.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach the S3 policy to the EC2 role
+resource "aws_iam_role_policy_attachment" "ec2_s3_policy_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.ec2_s3_policy.arn
+}
 # Attach permissions for CodeDeploy to the EC2 role
 resource "aws_iam_policy" "codedeploy_policy" {
   name        = "CodeDeployEC2Policy"
