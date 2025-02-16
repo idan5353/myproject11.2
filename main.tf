@@ -128,6 +128,7 @@ resource "aws_launch_template" "web_template" {
   instance_type          = "t2.micro"
   image_id               = "ami-0005ee01bca55ab66"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+  
   tags = {
     Name = "web-server"
   }
@@ -137,30 +138,40 @@ resource "aws_launch_template" "web_template" {
 
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              yum update -y
-              yum install -y httpd
-              systemctl start httpd
-              systemctl enable httpd
-              
-              # Create a simple index page
-              cat > /var/www/html/index.html << 'END'
-              <!DOCTYPE html>
-              <html>
-              <head>
-                  <title>Welcome to My Web Server</title>
-              </head>
-              <body>
-                  <h1>Hello from EC2! idan</h1>
-                  <p>This is a test page.</p>
-              </body>
-              </html>
-              END
+                            # Update the system and install Apache
+                            yum update -y
+                            yum install -y httpd
+                            systemctl start httpd
+                            systemctl enable httpd
 
-              # Create a health check page
-              cat > /var/www/html/health.html << 'END'
-              OK
-              END
-              EOF
+                            # Create a simple index page
+                            cat > /var/www/html/index.html << 'END'
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <title>Welcome to My Web Server</title>
+                            </head>
+                            <body>
+                                <h1>Hello from EC2! idan</h1>
+                                <p>This is a test page.</p>
+                            </body>
+                            </html>
+                            END
+
+                            # Create a health check page
+                            cat > /var/www/html/health.html << 'END'
+                            OK
+                            END
+
+                            # Install the CodeDeploy agent
+                            yum install -y ruby
+                            yum install -y wget
+                            cd /home/ec2-user
+                            wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+                            chmod +x ./install
+                            sudo ./install auto
+                            sudo service codedeploy-agent start
+                            EOF
   )
 
   tag_specifications {
