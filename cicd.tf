@@ -3,6 +3,7 @@ resource "aws_s3_bucket" "artifacts" {
   bucket = "my-web-artifacts-bucket"
 }
 
+# Enable versioning for the S3 bucket
 resource "aws_s3_bucket_versioning" "artifacts_versioning" {
   bucket = aws_s3_bucket.artifacts.id
   versioning_configuration {
@@ -10,47 +11,45 @@ resource "aws_s3_bucket_versioning" "artifacts_versioning" {
   }
 }
 
-# IAM Policy for EC2 and CodeDeploy Permissions
-resource "aws_iam_policy" "codepipeline_ec2_codedeploy_policy" {
-  name        = "CodePipelineEC2CodeDeployPolicy"
-  description = "Policy that allows CodePipeline to manage EC2 instances and CodeDeploy"
+# Block public access to the S3 bucket
+resource "aws_s3_bucket_public_access_block" "artifacts_public_access_block" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Bucket policy to allow CodePipeline and CodeBuild access
+resource "aws_s3_bucket_policy" "artifacts_bucket_policy" {
+  bucket = aws_s3_bucket.artifacts.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
+        Principal = {
+          Service = [
+            "codepipeline.amazonaws.com",
+            "codebuild.amazonaws.com"
+          ]
+        }
         Action = [
-          "ec2:DescribeInstances",
-          "ec2:DescribeInstanceStatus",
-          "ec2:StartInstances",
-          "ec2:StopInstances",
-          "ec2:RebootInstances",
-          "ec2:TerminateInstances",
-          "ec2:DescribeTags"
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:ListBucket"
         ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codedeploy:CreateDeployment",
-          "codedeploy:GetDeployment",
-          "codedeploy:RegisterApplicationRevision",
-          "codedeploy:StopDeployment"
+        Resource = [
+          aws_s3_bucket.artifacts.arn,
+          "${aws_s3_bucket.artifacts.arn}/*"
         ]
-        Resource = "*"
       }
     ]
   })
 }
-
-# Attach the Policy to the CodePipeline Role
-resource "aws_iam_role_policy_attachment" "codepipeline_policy_attachment" {
-  role       = "codepipeline-role" # Update this to the correct role name if needed
-  policy_arn = aws_iam_policy.codepipeline_ec2_codedeploy_policy.arn
-}
-
 
 # IAM Role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
@@ -169,8 +168,7 @@ resource "aws_iam_role" "codepipeline_role" {
   })
 }
 
-# IAM Policy for CodePipeline (including CodeDeploy and EC2 permissions)
-# Update the existing CodePipeline policy
+# IAM Policy for CodePipeline
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline-policy"
   role = aws_iam_role.codepipeline_role.name
@@ -200,7 +198,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "ec2:DescribeTags",
           "ec2:DescribeRegions",
           "ec2:DescribeSecurityGroups",
-          # Add these ELB permissions
           "elasticloadbalancing:DescribeTargetGroups",
           "elasticloadbalancing:DescribeLoadBalancers",
           "elasticloadbalancing:DescribeTargetHealth",
@@ -213,12 +210,12 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   })
 }
 
-# CodeDeploy Application (Ensure this exists in AWS Console)
+# CodeDeploy Application
 resource "aws_codedeploy_app" "myapp" {
   name = "myapp"
 }
 
-# CodeDeploy Deployment Group (Ensure this exists)
+# CodeDeploy Deployment Group
 resource "aws_codedeploy_deployment_group" "my_deployment_group" {
   app_name              = aws_codedeploy_app.myapp.name
   deployment_group_name = "my-deployment-group"
@@ -237,14 +234,14 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
 
   ec2_tag_set {
     ec2_tag_filter {
-      key   = "Environment"
+      key   = "Name"
       type  = "KEY_AND_VALUE"
-      value = "Production"
+      value = "web-server"
     }
   }
 }
 
-# Add a new policy attachment for CodeDeploy role
+# Attach CodeDeploy Service Role Policy
 resource "aws_iam_role_policy_attachment" "codedeploy_service" {
   role       = aws_iam_role.codepipeline_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
