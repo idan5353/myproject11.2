@@ -146,18 +146,9 @@ resource "aws_launch_template" "web_template" {
               systemctl start httpd
               systemctl enable httpd
 
-              # Create a simple index page
+              # Create the index page from file content
               cat > /var/www/html/index.html << 'END'
-              <!DOCTYPE html>
-              <html>
-              <head>
-                  <title>Welcome to My Web Server</title>
-              </head>
-              <body>
-                  <h1>Hello from EC2! idanking535 it workedplease!!!!!!</h1>
-                  <p>This is a test page.</p>
-              </body>
-              </html>
+              ${file("${path.module}/index.html")}
               END
 
               # Create a health check page
