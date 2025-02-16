@@ -164,8 +164,9 @@ resource "aws_launch_template" "web_template" {
                             END
 
                             # Install the CodeDeploy agent
-                            yum install -y ruby
-                            yum install -y wget
+                            sudo yum update -y
+                            sudo yum install -y ruby
+                            sudo yum install -y wget
                             cd /home/ec2-user
                             wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
                             chmod +x ./install
