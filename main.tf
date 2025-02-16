@@ -125,10 +125,12 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 # Launch Template
 resource "aws_launch_template" "web_template" {
   name                   = "web-template"
+  description           = "Version ${timestamp()}"
   instance_type          = "t2.micro"
   image_id               = "ami-0005ee01bca55ab66"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-  
+
+
   tags = {
     Name = "web-server"
   }
@@ -179,6 +181,9 @@ resource "aws_launch_template" "web_template" {
       Name = "web-server"
     }
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Target Group
@@ -222,7 +227,7 @@ resource "aws_autoscaling_group" "web_asg" {
       min_healthy_percentage = 50
       instance_warmup       = 300
     }
-    triggers = ["launch_template"]  # Automatically refresh when launch template changes
+
   }
 
   tag {
