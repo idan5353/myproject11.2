@@ -170,6 +170,7 @@ resource "aws_iam_role" "codepipeline_role" {
 }
 
 # IAM Policy for CodePipeline (including CodeDeploy and EC2 permissions)
+# Update the existing CodePipeline policy
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline-policy"
   role = aws_iam_role.codepipeline_role.name
@@ -195,10 +196,16 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:ListDeploymentGroups",
           "codedeploy:ListDeployments",
           "codestar-connections:UseConnection",
-          "ec2:DescribeInstances",      # Added EC2 permissions
-          "ec2:DescribeTags",           # Added EC2 permissions
-          "ec2:DescribeRegions",        # If needed for region-related EC2 info
-          "ec2:DescribeSecurityGroups"  # EC2 security group interaction
+          "ec2:DescribeInstances",
+          "ec2:DescribeTags",
+          "ec2:DescribeRegions",
+          "ec2:DescribeSecurityGroups",
+          # Add these ELB permissions
+          "elasticloadbalancing:DescribeTargetGroups",
+          "elasticloadbalancing:DescribeLoadBalancers",
+          "elasticloadbalancing:DescribeTargetHealth",
+          "elasticloadbalancing:RegisterTargets",
+          "elasticloadbalancing:DeregisterTargets"
         ]
         Resource = "*"
       }
@@ -235,6 +242,12 @@ resource "aws_codedeploy_deployment_group" "my_deployment_group" {
       value = "Production"
     }
   }
+}
+
+# Add a new policy attachment for CodeDeploy role
+resource "aws_iam_role_policy_attachment" "codedeploy_service" {
+  role       = aws_iam_role.codepipeline_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
 # CodePipeline
