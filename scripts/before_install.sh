@@ -8,3 +8,5 @@ if systemctl is-active --quiet httpd; then
 else
   echo "httpd is not running."
 fi
+rm -rf /var/www/html/*
+
