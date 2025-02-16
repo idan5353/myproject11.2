@@ -225,7 +225,7 @@ resource "aws_launch_template" "web_template" {
                   <script src="/track.js"></script>
               </head>
               <body>
-                  <h1>Welcome to Apache on EC2! idan it worked!</h1>
+                  <h1>Welcome to Apache on EC2! idan!! it worked!</h1>
                   <p>This page is tracking visitor analytics.</p>
               </body>
               </html>
