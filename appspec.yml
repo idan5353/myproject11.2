@@ -6,18 +6,18 @@ files:
     overwrite: true
 hooks:
   BeforeInstall:
-    - location: scripts/beforeinstall.sh
+    - location: scripts/before_install.sh
       timeout: 300
       runas: root
   AfterInstall:
-    - location: scripts/afterinstall.sh
+    - location: scripts/after_install.sh
       timeout: 300
       runas: root
   ApplicationStart:
-    - location: scripts/startapp.sh
+    - location: scripts/start_application.sh
       timeout: 300
       runas: root
   ValidateService:
-    - location: scripts/validate.sh
+    - location: scripts/validate_service.sh
       timeout: 300
       runas: root
