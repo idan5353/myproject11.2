@@ -130,7 +130,7 @@ resource "aws_launch_template" "web_template" {
   user_data = base64encode(<<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y httpd python3 python3-pip ruby wget
+              yum install -y httpd python3 python3-pip ruby wget mod_wsgi
               pip3 install boto3
               systemctl start httpd
               systemctl enable httpd
@@ -150,29 +150,103 @@ resource "aws_launch_template" "web_template" {
               import json
               import time
               from datetime import datetime, timedelta
+              import os
+              import logging
 
-              dynamodb = boto3.resource('dynamodb')
-              table = dynamodb.Table('visitor-analytics')
+              # Set up logging
+              logging.basicConfig(
+                  filename='/tmp/analytics.log',
+                  level=logging.INFO,
+                  format='%(asctime)s - %(levelname)s - %(message)s'
+              )
 
-              def record_visit(visitor_ip, path, user_agent):
-                  timestamp = datetime.utcnow().isoformat()
-                  expiration_time = int((datetime.utcnow() + timedelta(days=90)).timestamp())
+              def application(environ, start_response):
+                  try:
+                      # Get visitor information
+                      visitor_ip = environ.get('REMOTE_ADDR', 'unknown')
+                      path = environ.get('PATH_INFO', '/')
+                      user_agent = environ.get('HTTP_USER_AGENT', 'unknown')
+                      
+                      # Initialize DynamoDB
+                      dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
+                      table = dynamodb.Table('visitor-analytics')
+                      
+                      # Create timestamp and expiration
+                      timestamp = datetime.utcnow().isoformat()
+                      expiration_time = int((datetime.utcnow() + timedelta(days=90)).timestamp())
+                      
+                      # Record the visit
+                      table.put_item(
+                          Item={
+                              'visitor_ip': visitor_ip,
+                              'timestamp': timestamp,
+                              'path': path,
+                              'user_agent': user_agent,
+                              'expiration_time': expiration_time
+                          }
+                      )
+                      
+                      logging.info(f"Recorded visit from {visitor_ip} to {path}")
+                      
+                  except Exception as e:
+                      logging.error(f"Error recording visit: {str(e)}")
                   
-                  table.put_item(
-                      Item={
-                          'visitor_ip': visitor_ip,
-                          'timestamp': timestamp,
-                          'path': path,
-                          'user_agent': user_agent,
-                          'expiration_time': expiration_time
-                      }
-                  )
+                  # Return response
+                  status = '204 No Content'
+                  response_headers = [('Content-type', 'text/plain')]
+                  start_response(status, response_headers)
+                  return [b'']
               END
 
-              # Create basic index page
-              echo "Welcome to Apache on EC2! idan king535!!" > /var/www/html/index.html
+              # Create WSGI configuration
+              cat > /etc/httpd/conf.d/wsgi.conf << 'END'
+              LoadModule wsgi_module modules/mod_wsgi.so
+              WSGIScriptAlias /record-visit /var/www/html/analytics.py
+              END
+
+              # Create tracking JavaScript
+              cat > /var/www/html/track.js << 'END'
+              document.addEventListener('DOMContentLoaded', function() {
+                  fetch('/record-visit', {
+                      method: 'GET',
+                      headers: {
+                          'Cache-Control': 'no-cache'
+                      }
+                  }).catch(console.error);
+              });
+              END
+
+              # Create index page with analytics tracking
+              cat > /var/www/html/index.html << 'END'
+              <!DOCTYPE html>
+              <html>
+              <head>
+                  <title>Welcome to Apache on EC2</title>
+                  <script src="/track.js"></script>
+              </head>
+              <body>
+                  <h1>Welcome to Apache on EC2! idan it worked!</h1>
+                  <p>This page is tracking visitor analytics.</p>
+              </body>
+              </html>
+              END
+
+              # Set proper permissions
+              chown -R apache:apache /var/www/html/
+              chmod 755 /var/www/html/analytics.py
+              chmod 644 /var/www/html/track.js
+              chmod 644 /var/www/html/index.html
+
+              # Create log directory with proper permissions
+              mkdir -p /tmp/
+              chmod 777 /tmp/
+              touch /tmp/analytics.log
+              chmod 666 /tmp/analytics.log
+
+              # Restart Apache to apply changes
+              systemctl restart httpd
               EOF
-  )
+)
 
   monitoring {
     enabled = true

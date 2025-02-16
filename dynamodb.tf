@@ -42,7 +42,8 @@ resource "aws_iam_role_policy" "dynamodb_policy" {
           "dynamodb:GetItem",
           "dynamodb:UpdateItem",
           "dynamodb:Query",
-          "dynamodb:BatchWriteItem"
+          "dynamodb:BatchWriteItem",
+          "dynamodb:Scan"  # Added Scan permission
         ]
         Resource = [
           aws_dynamodb_table.visitor_analytics.arn
