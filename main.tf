@@ -420,8 +420,8 @@ resource "aws_cloudfront_distribution" "web_distribution" {
     }
 
     min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
+    default_ttl            = 0
+    max_ttl                = 0
   }
 
   web_acl_id = aws_wafv2_web_acl.main.arn

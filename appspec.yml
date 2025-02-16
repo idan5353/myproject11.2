@@ -3,6 +3,7 @@ os: linux
 files:
   - source: /
     destination: /var/www/html/
+    overwrite: true
 hooks:
   BeforeInstall:
     - location: scripts/before_install.sh
