@@ -54,6 +54,9 @@ resource "aws_cloudfront_distribution" "web_distribution" {
 
   web_acl_id = aws_wafv2_web_acl.web_acl.arn # Use the ARN of the Web ACL
 }
+
+
+
 # WAF Web ACL
 resource "aws_wafv2_web_acl" "web_acl" {
   name        = "web-acl"

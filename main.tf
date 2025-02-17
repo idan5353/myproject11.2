@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 3.56.0" # Minimum version with the resource
+    }
+  }
+}
+
 provider "aws" {
   region = "us-west-2"
 }
