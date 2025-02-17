@@ -57,6 +57,7 @@ resource "aws_cloudfront_distribution" "web_distribution" {
 
 
 
+
 # WAF Web ACL
 resource "aws_wafv2_web_acl" "web_acl" {
   name        = "web-acl"
