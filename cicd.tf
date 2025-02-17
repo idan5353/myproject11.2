@@ -247,6 +247,9 @@ resource "aws_iam_role_policy_attachment" "codedeploy_service" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
+
+
+
 # CodePipeline
 resource "aws_codepipeline" "web_pipeline" {
   name     = "web-pipeline"
@@ -311,3 +314,5 @@ resource "aws_codepipeline" "web_pipeline" {
     }
   }
 }
+
+
