@@ -8,5 +8,11 @@ if systemctl is-active --quiet httpd; then
 else
   echo "httpd is not running."
 fi
-rm -rf /var/www/html/*
 
+# Remove existing index.html to avoid conflicts during deployment
+if [ -f "/var/www/html/index.html" ]; then
+  echo "Removing existing index.html..."
+  rm -f /var/www/html/index.html
+else
+  echo "index.html does not exist."
+fi

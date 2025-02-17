@@ -12,4 +12,12 @@ echo "Setting permissions for /var/www/html..."
 chown -R apache:apache /var/www/html
 chmod -R 755 /var/www/html
 
+# Verify that index.html was deployed
+if [ -f "/var/www/html/index.html" ]; then
+  echo "index.html deployed successfully."
+else
+  echo "Error: index.html was not deployed."
+  exit 1
+fi
+
 echo "Permissions set successfully."

@@ -12,3 +12,12 @@ else
   echo "Error: Failed to start httpd."
   exit 1
 fi
+
+# Verify that index.html is accessible
+curl -s http://localhost/index.html > /dev/null
+if [ $? -eq 0 ]; then
+  echo "index.html is accessible."
+else
+  echo "Error: index.html is not accessible."
+  exit 1
+fi
