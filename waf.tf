@@ -20,7 +20,7 @@ resource "aws_cloudfront_distribution" "web_distribution" {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "ALB"
-
+    realtime_log_config_arn = aws_cloudfront_realtime_log_config.analytics.arn
     forwarded_values {
       query_string = false
       headers      = ["Host"]
@@ -28,6 +28,7 @@ resource "aws_cloudfront_distribution" "web_distribution" {
       cookies {
         forward = "none"
       }
+
     }
 
     viewer_protocol_policy = "allow-all"
@@ -55,7 +56,6 @@ resource "aws_cloudfront_distribution" "web_distribution" {
   web_acl_id = aws_wafv2_web_acl.web_acl.arn # Use the ARN of the Web ACL
 }
 
- 
 resource "null_resource" "invalidate_cache" {
   triggers = {
     distribution_id = aws_cloudfront_distribution.web_distribution.id
@@ -67,7 +67,6 @@ resource "null_resource" "invalidate_cache" {
 
   depends_on = [aws_cloudfront_distribution.web_distribution]
 }
-
 
 # WAF Web ACL
 resource "aws_wafv2_web_acl" "web_acl" {
