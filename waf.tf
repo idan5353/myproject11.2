@@ -56,17 +56,17 @@ resource "aws_cloudfront_distribution" "web_distribution" {
   web_acl_id = aws_wafv2_web_acl.web_acl.arn # Use the ARN of the Web ACL
 }
 
-resource "null_resource" "invalidate_cache" {
-  triggers = {
-    distribution_id = aws_cloudfront_distribution.web_distribution.id
-  }
+# resource "null_resource" "invalidate_cache" {
+#   triggers = {
+#     distribution_id = aws_cloudfront_distribution.web_distribution.id
+#   }
 
-  provisioner "local-exec" {
-    command = "aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.web_distribution.id} --paths /*"
-  }
+#   provisioner "local-exec" {
+#     command = "aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.web_distribution.id} --paths /*"
+#   }
 
-  depends_on = [aws_cloudfront_distribution.web_distribution]
-}
+#   depends_on = [aws_cloudfront_distribution.web_distribution]
+# }
 
 # WAF Web ACL
 resource "aws_wafv2_web_acl" "web_acl" {

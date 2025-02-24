@@ -7,7 +7,7 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - npm install
-
+  
   pre_build:
     commands:
       - echo "Pre-build phase"
@@ -15,18 +15,20 @@ phases:
       - node -v
       - echo "NPM version:"
       - npm -v
-
+  
   build:
     commands:
       - echo "Starting build phase..."
       - echo "Building the application..."
       - npm run build || echo "Build script needs to be configured"
-
+  
   post_build:
     commands:
       - echo "Build phase completed"
       - echo "Directory contents:"
       - ls -la
+      - echo "Invalidating CloudFront distribution..."
+      - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
 
 artifacts:
   files:

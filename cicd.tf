@@ -97,7 +97,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "codedeploy:GetApplication",
           "codedeploy:GetApplicationRevision",
           "codedeploy:ListApplications",
-          "codedeploy:ListDeploymentGroups"
+          "codedeploy:ListDeploymentGroups",
+          "cloudfront:CreateInvalidation"
         ],
         Resource = "*"
       }
@@ -126,6 +127,10 @@ resource "aws_codebuild_project" "web_build" {
     environment_variable {
       name  = "NODE_ENV"
       value = "production"
+    }
+    environment_variable {
+      name  = "CLOUDFRONT_DISTRIBUTION_ID"
+      value = aws_cloudfront_distribution.web_distribution.id
     }
   }
 
