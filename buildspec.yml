@@ -29,6 +29,8 @@ phases:
       - ls -la
       - echo "Invalidating CloudFront distribution..."
       - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
+      - echo "Reloading Prometheus configuration..."
+      - aws ssm send-command --document-name "AWS-RunShellScript" --targets "Key=tag:Name,Values=prometheus-grafana" --parameters "commands=['docker kill -s HUP prometheus']"
 
 artifacts:
   files:

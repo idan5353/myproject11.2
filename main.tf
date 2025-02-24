@@ -173,6 +173,34 @@ resource "aws_launch_template" "web_template" {
               chmod +x ./install
               sudo ./install auto
               sudo service codedeploy-agent start
+              
+              # Install Node Exporter for Prometheus monitoring
+              cd /tmp
+              wget https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+              tar xvfz node_exporter-1.6.1.linux-amd64.tar.gz
+              sudo mv node_exporter-1.6.1.linux-amd64/node_exporter /usr/local/bin/
+              
+              # Create Node Exporter systemd service
+              cat > /etc/systemd/system/node_exporter.service << 'END'
+              [Unit]
+              Description=Node Exporter
+              Wants=network-online.target
+              After=network-online.target
+              
+              [Service]
+              User=root
+              Group=root
+              Type=simple
+              ExecStart=/usr/local/bin/node_exporter
+              
+              [Install]
+              WantedBy=multi-user.target
+              END
+              
+              # Start Node Exporter
+              systemctl daemon-reload
+              systemctl start node_exporter
+              systemctl enable node_exporter
               EOF
 )
   tag_specifications {
